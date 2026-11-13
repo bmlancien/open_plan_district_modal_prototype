@@ -3,6 +3,8 @@
 Static prototype of the neighbourhood heat demand modal, built 1:1 from the canvas design
 (artboard "Wärmebedarf Quartier – team structure, refined"), with placeholder data.
 
+**Live demo:** https://bmlancien.github.io/open_plan_district_modal_prototype/modal.html
+
 Open `modal.html` in a browser. No build step, no libraries (only the Lato font).
 
 | File | What |
