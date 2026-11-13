@@ -1,0 +1,899 @@
+// open_plan – modal "Wärmebedarf Quartier" (neighbourhood heat demand)
+// Plain SCSS, BEM, prefix qm-. Markup: modal.html. Values from the canvas design.
+//
+// In the app: main.css forces a { color … !important; font-weight: 700 } and loads before
+// Bootstrap; Bootstrap's own .modal is not used here (qm-backdrop / qm-modal), so nothing clashes.
+
+// ---------- variables ----------
+$qm-primary: #1f5673;
+$qm-primary-dark: #143a4e;
+$qm-text: #1b2b3a;
+$qm-text-2: #3b4d5e;
+$qm-muted: #5a6b7b;
+$qm-muted-2: #8696a5;
+$qm-input-border: #c3cfd9;
+$qm-input-filled: #9fb2c1;
+$qm-border: #dbe3ea;
+$qm-border-light: #e3e9ee;
+$qm-line: #edf1f4;
+$qm-bg-soft: #f6f8fa;
+$qm-tag-bg: #e3e9ee;
+$qm-head-soft: #e8f0f5;
+$qm-white: #fff;
+$qm-ok: #1e6b47;
+$qm-ok-bg: #f1f8f4;
+$qm-under: #8a5200;
+$qm-under-bg: #fdf3e4;
+$qm-under-row: #fffaf2;
+$qm-over: #b3261e;
+$qm-over-bg: #fcf0ef;
+$qm-dot: #d03a2f;
+$qm-warn-bg: #fdf1e2;
+$qm-first-col: 200px;
+$qm-sum-col: 130px;
+$qm-cell: 120px;
+
+.qm-chevron {
+  transition: transform 0.15s;
+}
+
+[aria-expanded="true"] > .qm-chevron {
+  transform: rotate(90deg);
+}
+
+.qm-dot {
+  flex-shrink: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 4px;
+  background: $qm-dot;
+
+}
+
+// ---------- PROTOTYPE ONLY: bar above the modal (3 / 24 connections, open again) ----------
+.qm-proto {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: 56px;
+  padding: 0 24px;
+  border-bottom: 1px solid $qm-border;
+  background: $qm-white;
+  font-family: Lato, "Helvetica Neue", Arial, sans-serif;
+
+  button {
+    font-family: inherit;
+  }
+
+  &__label {
+    color: $qm-muted;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  &__open {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 36px;
+    padding: 0 16px;
+    font-size: 14px;
+  }
+}
+
+// ---------- backdrop and dialog ----------
+.qm-backdrop {
+  position: fixed;
+  inset: var(--qm-top, 0) 0 0 0;
+  z-index: 50;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 24px;
+  background: rgba(27, 43, 58, 0.45);
+
+  &--alert {
+    inset: 0;
+    z-index: 60;
+    align-items: center;
+    padding-top: 0;
+    background: rgba(27, 43, 58, 0.35);
+  }
+}
+
+.qm-modal {
+  display: flex;
+  flex-direction: column;
+  width: 920px;
+  max-width: calc(100% - 32px);
+  max-height: calc(100% - 24px);
+  border-radius: 12px;
+  background: $qm-white;
+  box-shadow: 0 20px 48px rgba(27, 43, 58, 0.28);
+  overflow: hidden;
+  isolation: isolate;
+  color: $qm-text;
+  font-family: Lato, "Helvetica Neue", Arial, sans-serif;
+
+  input,
+  select,
+  button {
+    font-family: inherit;
+  }
+
+  input:focus,
+  select:focus,
+  button:focus-visible {
+    outline: 2px solid $qm-primary;
+    outline-offset: 1px;
+  }
+
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    border-bottom: 1px solid $qm-border-light;
+    background: $qm-bg-soft;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 900;
+  }
+
+  &__close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: $qm-text-2;
+    cursor: pointer;
+  }
+
+  // scrolls; the tabs stick to its top
+  &__body {
+    flex-grow: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  &__name {
+    display: flex;
+    padding: 20px 24px 0;
+  }
+
+  &__panel {
+    padding: 20px 24px;
+  }
+
+  &__foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 24px;
+    border-top: 1px solid $qm-border-light;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 10px;
+  }
+}
+
+// ---------- form basics ----------
+.qm-field {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  gap: 6px;
+  color: $qm-text-2;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.qm-input {
+  height: 36px;
+  min-width: 0;
+  padding: 0 10px;
+  border: 1px solid $qm-input-border;
+  border-radius: 6px;
+  background: $qm-white;
+  color: $qm-text;
+  font-size: 14px;
+
+  &--tall {
+    height: 40px;
+    font-size: 15px;
+  }
+}
+
+select.qm-input {
+  padding: 0 8px;
+}
+
+// input with a unit at the end (kWh/a, kWh)
+.qm-unit-field {
+  display: flex;
+  align-items: center;
+  height: 36px;
+  border: 1px solid $qm-input-border;
+  border-radius: 6px;
+  overflow: hidden;
+
+  input {
+    flex-grow: 1;
+    min-width: 0;
+    height: 100%;
+    padding: 0 8px;
+    border: 0;
+    color: $qm-text;
+    font-size: 14px;
+    text-align: right;
+  }
+
+  span {
+    padding: 0 8px;
+    color: $qm-muted;
+    font-size: 14px;
+  }
+
+  &--const {
+    width: 260px;
+    height: 40px;
+  }
+}
+
+.qm-btn {
+  height: 44px;
+  padding: 0 20px;
+  border: 1px solid $qm-input-border;
+  border-radius: 6px;
+  background: $qm-white;
+  color: $qm-text;
+  font-size: 15px;
+  cursor: pointer;
+
+  &--primary {
+    padding: 0 24px;
+    border: 0;
+    background: $qm-primary;
+    color: $qm-white;
+    font-weight: 700;
+  }
+}
+
+.qm-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 36px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: $qm-muted;
+  cursor: pointer;
+}
+
+.qm-link-btn {
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 4px;
+  border: 0;
+  background: transparent;
+  color: $qm-primary;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.qm-note {
+  color: $qm-muted;
+  font-size: 14px;
+
+  &--tight {
+    margin-top: -4px;
+  }
+
+  &--error {
+    color: $qm-over;
+    font-weight: 700;
+  }
+}
+
+.qm-muted {
+  color: $qm-muted;
+}
+
+.qm-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: $qm-text-2;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.qm-help {
+  display: flex;
+  color: $qm-muted;
+}
+
+.qm-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+// ---------- tabs (stick to the top of the scrolling body) ----------
+.qm-tabs {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: flex;
+  gap: 4px;
+  padding: 24px 24px 0;
+  border-bottom: 1px solid $qm-border;
+  background: $qm-white;
+
+  &__tab {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 44px;
+    padding: 0 20px;
+    border: 0;
+    border-bottom: 3px solid transparent;
+    background: transparent;
+    color: $qm-muted;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+
+    &[aria-selected="true"] {
+      border-bottom-color: $qm-primary;
+      color: $qm-text;
+    }
+  }
+
+  // number of connections (edges on the canvas)
+  &__count {
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: $qm-tag-bg;
+    color: $qm-text-2;
+    font-size: 14px;
+    font-weight: 700;
+  }
+}
+
+// ---------- tab "Lastprofile" ----------
+.qm-profiles {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid $qm-border;
+  border-radius: 8px;
+  overflow: hidden;
+
+  &__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 210px 200px 110px 44px;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    border-top: 1px solid $qm-line;
+
+    &--head {
+      padding: 10px 12px;
+      border-top: 0;
+      background: $qm-primary;
+      color: $qm-white;
+      font-size: 14px;
+      font-weight: 700;
+    }
+  }
+
+  &__add {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 48px;
+    border: 0;
+    border-top: 1px solid $qm-line;
+    background: $qm-bg-soft;
+    color: $qm-primary;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+}
+
+// sections below the profiles (time series, central supply)
+.qm-block {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 36px;
+  padding-top: 28px;
+  border-top: 1px solid $qm-border-light;
+
+  &--supply {
+    gap: 14px;
+  }
+
+  &__head {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  &__title {
+    font-size: 16px;
+    font-weight: 900;
+  }
+}
+
+// select / upload / constant value
+.qm-modes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border: 1px solid $qm-input-border;
+  border-radius: 8px;
+  overflow: hidden;
+
+  &__btn {
+    height: 40px;
+    border: 0;
+    background: $qm-white;
+    color: $qm-text-2;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+
+    & + & {
+      border-left: 1px solid $qm-input-border;
+    }
+
+    &[aria-selected="true"] {
+      background: $qm-primary;
+      color: $qm-white;
+    }
+  }
+}
+
+.qm-drop {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 72px;
+  border: 1.5px dashed $qm-input-filled;
+  border-radius: 8px;
+  color: $qm-text-2;
+  font-size: 14px;
+  cursor: pointer;
+
+  b {
+    color: $qm-primary;
+  }
+}
+
+.qm-gen {
+  display: flex;
+  gap: 2px;
+  height: 12px;
+  border-radius: 6px;
+  background: $qm-white;
+  overflow: hidden;
+}
+
+.qm-gen-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+  }
+}
+
+.qm-gen-table {
+  width: 100%;
+  border: 1px solid $qm-border;
+  border-radius: 8px;
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+  font-size: 14px;
+
+  th,
+  td {
+    padding: 10px 12px;
+    text-align: right;
+  }
+
+  thead th {
+    border-bottom: 1px solid $qm-border;
+    background: $qm-head-soft;
+    color: $qm-text;
+  }
+
+  th:first-child {
+    width: 200px;
+    text-align: left;
+  }
+
+  tbody th,
+  td {
+    color: $qm-muted;
+  }
+}
+
+// ---------- tab "Anschlussraten" ----------
+.qm-rates {
+  &__intro {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 12px;
+  }
+
+  &__text {
+    color: $qm-text-2;
+    font-size: 14px;
+    line-height: 1.4;
+  }
+}
+
+.qm-segmented {
+  display: flex;
+  flex-shrink: 0;
+  height: 36px;
+  border: 1px solid $qm-input-border;
+  border-radius: 8px;
+  overflow: hidden;
+
+  button {
+    padding: 0 12px;
+    border: 0;
+    background: $qm-white;
+    color: $qm-text-2;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+
+    & + button {
+      border-left: 1px solid $qm-input-border;
+    }
+
+    &[aria-pressed="true"] {
+      background: $qm-primary;
+      color: $qm-white;
+    }
+  }
+}
+
+// rates table: flex rows, sticky first column (and Σ column), scrolls sideways
+.qm-table {
+  border: 1px solid $qm-border;
+  border-radius: 8px;
+  overflow-x: auto;
+
+  &__inner {
+    display: flex;
+    flex-direction: column;
+    width: max-content;
+    min-width: 100%;
+  }
+
+  &__row {
+    display: flex;
+
+    &--head {
+      background: $qm-primary;
+      color: $qm-white;
+      font-size: 14px;
+      font-weight: 700;
+    }
+  }
+
+  &__first {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    width: $qm-first-col;
+    height: 52px;
+    padding: 0 12px;
+    border-top: 1px solid $qm-line;
+    border-right: 1px solid $qm-line;
+    background: $qm-bg-soft;
+    font-size: 14px;
+    font-weight: 700;
+
+    span {
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+  }
+
+  &__cell {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex: 1 0 $qm-cell;
+    height: 52px;
+    padding: 0 10px;
+    border-top: 1px solid $qm-line;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  &__sum {
+    position: sticky;
+    right: 0;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+    flex-shrink: 0;
+    width: $qm-sum-col;
+    height: 52px;
+    padding: 0 12px;
+    border-top: 1px solid $qm-line;
+    border-left: 1px solid $qm-border;
+  }
+
+  // header row (three classes, so it wins over the --rotated rules below)
+  & &__row--head &__first,
+  & &__row--head &__cell,
+  & &__row--head &__sum {
+    height: auto;
+    padding-top: 12px;
+    padding-bottom: 12px;
+    border: 0;
+    background: $qm-primary;
+  }
+
+  & &__row--head &__cell {
+    display: block;
+    text-align: right;
+  }
+
+  & &__row--head &__sum {
+    background: $qm-primary-dark;
+  }
+
+  // a building group that is not at 100 % yet: light tint only
+  &__row.is-open &__cell {
+    background: $qm-under-row;
+  }
+
+  &__row.is-open &__first {
+    background: $qm-under-bg;
+  }
+
+  // rotated: suppliers as rows, Σ row at the bottom (sticky)
+  &--rotated &__first {
+    height: 48px;
+    background: $qm-white;
+  }
+
+  &--rotated &__cell {
+    height: 48px;
+  }
+
+  &__row--foot {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    border-top: 2px solid $qm-border;
+    background: $qm-white;
+    box-shadow: 0 -4px 10px rgba(27, 43, 58, 0.06);
+  }
+
+  &__row--foot &__first {
+    font-weight: 900;
+  }
+
+  &__row--foot &__cell {
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+  }
+}
+
+// Σ of a row (or column): icon + text, light background
+.qm-sum {
+  &__value {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    font-weight: 900;
+  }
+
+  &--ok {
+    background: $qm-ok-bg;
+    color: $qm-ok;
+  }
+
+  &--under {
+    background: $qm-under-bg;
+    color: $qm-under;
+  }
+
+  &--over {
+    background: $qm-over-bg;
+    color: $qm-over;
+  }
+}
+
+// % field
+.qm-rate {
+  display: flex;
+  align-items: center;
+  width: 92px;
+  height: 34px;
+  border: 1px solid $qm-border;
+  border-radius: 6px;
+  background: $qm-white;
+  overflow: hidden;
+
+  &--filled {
+    border-color: $qm-input-filled;
+  }
+
+  input {
+    flex-grow: 1;
+    min-width: 0;
+    height: 100%;
+    padding: 0 6px;
+    border: 0;
+    background: transparent;
+    color: $qm-text;
+    font-size: 14px;
+    text-align: right;
+  }
+
+  span {
+    padding: 0 8px 0 2px;
+    color: $qm-muted-2;
+    font-size: 14px;
+  }
+}
+
+// ---------- warning on close ----------
+.qm-alert {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 440px;
+  padding: 24px;
+  border-radius: 12px;
+  background: $qm-white;
+  box-shadow: 0 20px 48px rgba(27, 43, 58, 0.3);
+  color: $qm-text;
+  font-family: Lato, "Helvetica Neue", Arial, sans-serif;
+
+  button {
+    font-family: inherit;
+  }
+
+  button:focus-visible {
+    outline: 2px solid $qm-primary;
+    outline-offset: 1px;
+  }
+
+  &__head {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+
+    > div:last-child {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+  }
+
+  &__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 20px;
+    background: $qm-warn-bg;
+    color: $qm-under;
+  }
+
+  &__title {
+    font-size: 18px;
+    font-weight: 900;
+  }
+
+  &__text {
+    color: $qm-text-2;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-left: 52px;
+  }
+
+  &__row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-radius: 6px;
+    background: $qm-bg-soft;
+    font-size: 14px;
+
+    b {
+      color: $qm-under;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+
+  .qm-btn {
+    padding: 0 18px;
+  }
+
+  .qm-btn--primary {
+    padding: 0 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .qm-chevron {
+    transition: none;
+  }
+}
+
+// rotated table: no sideways container, so the header can stick below the tabs
+// (57 px = height of .qm-tabs) and the Σ row to the bottom of the scrolling body
+.qm-table--rotated {
+  overflow: visible;
+}
+
+.qm-table__row--sticky-top {
+  position: sticky;
+  top: 57px;
+  z-index: 2;
+}
